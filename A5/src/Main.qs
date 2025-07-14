@@ -9,8 +9,6 @@
 //
 // You have to implement an operation which takes a single-qubit operation as an input and returns an integer.
 
-open Microsoft.Quantum.Intrinsic;
-
 operation Main() : Unit
 {    
     Message($"{Solve(Z)}");
@@ -18,16 +16,25 @@ operation Main() : Unit
 }
 
 operation Solve (unitary : (Qubit => Unit is Adj+Ctl)) : Int 
-{        
+{       
+    // Prepare two qubits in the |00⟩ state 
     use qs = Qubit[2];
 
-    H(qs[0]); 
-    Controlled unitary(qs[0..0], qs[1]);
+    // Apply the Hadamard gate to put the first qubit in superposition
     H(qs[0]);
 
+    // Apply the controlled version of the unitary transformation with the first qubit as control and the second qubit as target
+    Controlled unitary(qs[0..0], qs[1]);
+
+    // Apply the Hadamard gate again to bring the first qubit back to the computational basis
+    H(qs[0]);
+
+    // Measure the first qubit and return 0 for Z gate, 1 for -Z gate.
+    // Thanks to the 'Phase Kickback' effect! https://en.wikipedia.org/wiki/Phase_kickback
     return MResetZ(qs[0]) == Zero ? 0 | 1;
 }
 
+// Helper operations to implement the -Z gate
 operation MinusOne (q : Qubit) : Unit is Adj+Ctl
 {
     within { X(q); }
@@ -35,15 +42,17 @@ operation MinusOne (q : Qubit) : Unit is Adj+Ctl
     Z(q);
 }
 
- internal operation ApplyBoundCA<'T> ( ops : ('T => Unit is Adj + Ctl)[], arg : 'T) : Unit is Adj + Ctl
- {
+// Helper operations to implement the -Z gate
+internal operation ApplyBoundCA<'T> ( ops : ('T => Unit is Adj + Ctl)[], arg : 'T) : Unit is Adj + Ctl
+{
     for op in ops
     {
         op(arg);
     }
- }
- 
- function BoundCA<'T> ( ops : ('T => Unit is Adj + Ctl)[] ) : ('T => Unit is Adj + Ctl)
- {
+}
+
+// Helper function to implement the -Z gate
+function BoundCA<'T> ( ops : ('T => Unit is Adj + Ctl)[] ) : ('T => Unit is Adj + Ctl)
+{
     return ApplyBoundCA(ops, _);
- }
+}

@@ -8,8 +8,6 @@
 //
 // You have to implement an operation which takes a single-qubit operation as an input and returns an integer.
 
-open Microsoft.Quantum.Intrinsic;
-
 operation Main() : Unit
 {    
     Message($"{Solve(I)}");
@@ -17,9 +15,15 @@ operation Main() : Unit
 }
 
 operation Solve (unitary : (Qubit => Unit is Adj+Ctl)) : Int 
-{        
+{
+    // Prepare a qubit in the |0⟩ state
     use q = Qubit();
-    unitary(q); // Apply the unitary transformation
 
-    return MResetZ(q) == Zero ? 0 | 1; // Measure the qubit and return 0 for I gate, 1 for X gate
+    // Apply the unitary transformation.
+    unitary(q);
+
+    // Measure the qubit and return 0 for I gate, 1 for X gate.
+    // If the unitary was I, the qubit remains in |0⟩ state, and MResetZ(q) will return Zero.
+    // If the unitary was X, the qubit will be rotated around the x-axis and in |1⟩ state, and MResetZ(q) will return One.
+    return MResetZ(q) == Zero ? 0 | 1;
 }
